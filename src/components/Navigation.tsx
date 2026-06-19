@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { BookOpen, Users, ClipboardList, Camera, LayoutDashboard, Settings } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { BookOpen, Users, ClipboardList, Camera, LayoutDashboard, LogOut } from 'lucide-react';
 
 const nav = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -10,11 +10,18 @@ const nav = [
   { href: '/students', label: 'Students', icon: Users },
   { href: '/assignments', label: 'Assignments', icon: ClipboardList },
   { href: '/classes', label: 'Classes', icon: BookOpen },
-  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function Navigation() {
   const path = usePathname();
+  const router = useRouter();
+
+  async function logout() {
+    await fetch('/api/logout', { method: 'POST' });
+    router.push('/login');
+    router.refresh();
+  }
+
   return (
     <nav className="fixed left-0 top-0 h-full w-56 bg-slate-900 text-slate-100 flex flex-col">
       <div className="px-4 py-5 border-b border-slate-700">
@@ -41,6 +48,15 @@ export default function Navigation() {
           );
         })}
       </ul>
+      <div className="px-2 pb-4">
+        <button
+          onClick={logout}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white w-full transition-colors"
+        >
+          <LogOut size={17} />
+          Sign Out
+        </button>
+      </div>
     </nav>
   );
 }

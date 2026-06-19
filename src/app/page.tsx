@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Camera, Users, ClipboardList, TrendingUp, Settings, ArrowRight } from 'lucide-react';
-import { getSupabaseClient, getSettings } from '@/lib/supabase';
+import { Camera, Users, ClipboardList, TrendingUp } from 'lucide-react';
+import { getSupabaseClient } from '@/lib/supabase';
 
 interface Stats {
   students: number;
@@ -39,14 +39,9 @@ function gradeColor(pct: number) {
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats>({ students: 0, assignments: 0, submissions: 0, avgPercent: null });
   const [recent, setRecent] = useState<RecentSubmission[]>([]);
-  const [configured, setConfigured] = useState(true);
+
 
   const load = useCallback(async () => {
-    const settings = getSettings();
-    if (!settings.supabaseUrl || !settings.supabaseAnonKey) {
-      setConfigured(false);
-      return;
-    }
     const sb = getSupabaseClient();
     if (!sb) return;
 
@@ -68,26 +63,7 @@ export default function Dashboard() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (!configured) {
-    return (
-      <div className="max-w-lg">
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Welcome to GradeScope</h1>
-        <p className="text-slate-500 mb-8">Set up your keys to get started.</p>
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
-            <Settings size={22} className="text-indigo-600" />
-          </div>
-          <h2 className="font-semibold text-slate-800 mb-1">Configure GradeScope</h2>
-          <p className="text-sm text-slate-500 mb-4">
-            You need a Claude API key and a Supabase project to use GradeScope. Both have free tiers.
-          </p>
-          <Link href="/settings" className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
-            Go to Settings <ArrowRight size={15} />
-          </Link>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="max-w-4xl">
