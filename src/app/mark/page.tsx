@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Camera, Upload, Sparkles, Save, RotateCcw, Award, AlertCircle, Brain, CheckCircle } from 'lucide-react';
-import { getSupabaseClient } from '@/lib/supabase';
+import { getSupabaseClient, getSettings } from '@/lib/supabase';
 import type { Student, Assignment, Class, CriterionScore } from '@/lib/types';
 
 type Step = 'select' | 'photo' | 'marking' | 'review' | 'saved';
@@ -82,11 +82,18 @@ export default function MarkPage() {
     if (!selectedStudent || !selectedAssignment || !imageBase64) return;
     setMarking(true);
     setError('');
+    const { claudeApiKey } = getSettings();
+    if (!claudeApiKey) {
+      setError('No Claude API key. Go to Settings to add one.');
+      setMarking(false);
+      return;
+    }
     try {
       const res = await fetch('/api/mark', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-api-key': claudeApiKey,
         },
         body: JSON.stringify({
           imageBase64,

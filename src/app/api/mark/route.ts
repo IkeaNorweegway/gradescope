@@ -16,9 +16,9 @@ interface MarkRequest {
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = req.headers.get('x-api-key');
   if (!apiKey) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 });
+    return NextResponse.json({ error: 'No API key provided' }, { status: 401 });
   }
 
   const body: MarkRequest = await req.json();

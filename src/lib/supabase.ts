@@ -1,13 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const key = process.env.NEXT_PUBLIC_SUPABASE_KEY || '';
-
-let client: ReturnType<typeof createClient> | null = null;
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getSupabaseClient(): any | null {
+  if (typeof window === 'undefined') return null;
+  const url = localStorage.getItem('gs_supabase_url') || '';
+  const key = localStorage.getItem('gs_supabase_key') || '';
   if (!url || !key) return null;
-  if (!client) client = createClient(url, key);
-  return client;
+  return createClient(url, key);
+}
+
+export function getSettings() {
+  if (typeof window === 'undefined') return { claudeApiKey: '', supabaseUrl: '', supabaseAnonKey: '' };
+  return {
+    claudeApiKey: localStorage.getItem('gs_claude_key') || '',
+    supabaseUrl: localStorage.getItem('gs_supabase_url') || '',
+    supabaseAnonKey: localStorage.getItem('gs_supabase_key') || '',
+  };
+}
+
+export function saveSettings(settings: { claudeApiKey: string; supabaseUrl: string; supabaseAnonKey: string }) {
+  localStorage.setItem('gs_claude_key', settings.claudeApiKey);
+  localStorage.setItem('gs_supabase_url', settings.supabaseUrl);
+  localStorage.setItem('gs_supabase_key', settings.supabaseAnonKey);
 }
