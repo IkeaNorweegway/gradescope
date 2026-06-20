@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const client = new Anthropic({ apiKey });
 
   const rubricText = assignment.rubric
-    .map((c) => `- ${c.name} (${c.max_points} pts): ${c.description}`)
+    .map((c, i) => `- Criterion ${i + 1} — ${c.name} (${c.max_points} pts): ${c.description}`)
     .join('\n');
 
   const prompt = `You are an experienced teacher marking a student assignment. 
@@ -43,12 +43,11 @@ ${rubricText}
 
 Please carefully examine the student's work in the image and mark it according to the rubric above.
 
-Respond with ONLY valid JSON in this exact format:
+Respond with ONLY valid JSON in this exact format. Return rubric_scores in the SAME ORDER as the criteria listed above (Criterion 1 first, then 2, 3, 4...):
 {
   "rubric_scores": [
     {
-      "criterion_id": "<id from rubric>",
-      "criterion_name": "<name>",
+      "criterion_name": "<exact name from rubric>",
       "score": <number>,
       "max_points": <number>,
       "comment": "<specific comment about this criterion>"
@@ -95,15 +94,18 @@ Respond with ONLY valid JSON in this exact format:
     return NextResponse.json({ error: 'Failed to parse AI response', raw: text }, { status: 500 });
   }
 
-  // Attach criterion_ids from the rubric in case AI missed them
-  const scores: CriterionScore[] = assignment.rubric.map((criterion) => {
-    const aiScore = result.rubric_scores?.find(
-      (s: CriterionScore) => s.criterion_name === criterion.name || s.criterion_id === criterion.id
+  // Match by index (most reliable) then fall back to name matching
+  const scores: CriterionScore[] = assignment.rubric.map((criterion, i) => {
+    const byIndex = result.rubric_scores?.[i];
+    const byName = result.rubric_scores?.find(
+      (s: CriterionScore) =>
+        s.criterion_name?.toLowerCase().trim() === criterion.name?.toLowerCase().trim()
     );
+    const aiScore = byIndex ?? byName;
     return {
       criterion_id: criterion.id,
       criterion_name: criterion.name,
-      score: aiScore?.score ?? 0,
+      score: Number(aiScore?.score) || 0,
       max_points: criterion.max_points,
       comment: aiScore?.comment ?? '',
     };
